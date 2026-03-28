@@ -1,0 +1,12 @@
+{
+  "id": "DontAbandonYourFriends",
+  "name": "Don't Abandon Your Friends",
+  "version": "v0.1.0",
+  "description": "Author: latentspacez \u00b7 v0.1.0 \u2014 Multiplayer co-op save archive: loading another backup auto-saves your current run into this mod's archive. Browse previews (act, floor, ascension, timing), load into the live multiplayer slot, unload the active run to the archive, or delete backups. Writes go through the game's save store (Steam Cloud aware).",
+  "author": "latentspacez",
+  "compatible_game_versions": [],
+  "main_class": "DontAbandonYourFriends.MainFile",
+  "has_dll": true,
+  "has_pck": false,
+  "affects_gameplay": false
+}

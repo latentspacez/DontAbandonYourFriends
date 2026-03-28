@@ -1,0 +1,131 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>DontAbandonYourFriends</RootNamespace>
+        <AssemblyName>DontAbandonYourFriends</AssemblyName>
+        <ImplicitUsings>true</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
+        <PathMap>$(AppOutputBase)=.\</PathMap>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <OutputPath>publish/</OutputPath>
+        <PackageId>latentspacez.Sts2.DontAbandonYourFriends</PackageId>
+        <Title>Don't Abandon Your Friends (Slay the Spire 2)</Title>
+        <Description>v$(Version) by latentspacez — Multiplayer co-op save archive for Slay the Spire 2: auto-backup when switching saves, load into the live slot, unload, delete. Uses the game save store (Steam Cloud aware).</Description>
+        <Authors>latentspacez</Authors>
+        <Company>latentspacez</Company>
+        <Product>DontAbandonYourFriends</Product>
+        <PackageTags>c#;sts2;mod</PackageTags>
+        <NoWarn>$(NoWarn);NU5128;MSB3270</NoWarn>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsWindows>false</IsWindows>
+        <IsLinux>false</IsLinux>
+        <IsOSX>false</IsOSX>
+        <IsWindows Condition="$([MSBuild]::IsOSPlatform('Windows'))">true</IsWindows>
+        <IsLinux Condition="$([MSBuild]::IsOSPlatform('Linux'))">true</IsLinux>
+        <IsOSX Condition="$([MSBuild]::IsOSPlatform('OSX'))">true</IsOSX>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(IsWindows)' == 'true'">
+        <Sts2Path Condition="'$(Sts2Path)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2868840', 'InstallLocation', '', RegistryView.Registry64, RegistryView.Registry32))</Sts2Path>
+        <AutoSteamPath>$(registry:HKEY_CURRENT_USER\Software\Valve\Steam@SteamPath)\steamapps</AutoSteamPath>
+        <SteamLibraryPath Condition="'$(SteamLibraryPath)' == '' and Exists('$(AutoSteamPath)/common/Slay the Spire 2')">$(AutoSteamPath)</SteamLibraryPath>
+        <SteamLibraryPath Condition="'$(SteamLibraryPath)' == ''">E:\SteamLibrary\steamapps</SteamLibraryPath>
+        <Sts2Path Condition="'$(Sts2Path)' == ''">$(SteamLibraryPath)/common/Slay the Spire 2</Sts2Path>
+        <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">$(Sts2Path)/data_sts2_windows_x86_64</Sts2DataDir>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(IsLinux)' == 'true'">
+        <SteamLibraryPath Condition="'$(SteamLibraryPath)' == ''">$(HOME)/.local/share/Steam/steamapps</SteamLibraryPath>
+        <GodotPath Condition="'$(GodotPath)' == ''">$(HOME)/bin/megadot/megadot</GodotPath>
+        <Sts2Path Condition="'$(Sts2Path)' == ''">$(SteamLibraryPath)/common/Slay the Spire 2</Sts2Path>
+        <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">$(Sts2Path)/data_sts2_linuxbsd_x86_64</Sts2DataDir>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(IsOSX)' == 'true'">
+        <SteamLibraryPath Condition="'$(SteamLibraryPath)' == ''">$(HOME)/Library/Application Support/Steam/steamapps</SteamLibraryPath>
+        <GodotPath Condition="'$(GodotPath)' == ''">$(HOME)/</GodotPath>
+        <Sts2Path Condition="'$(Sts2Path)' == ''">$(SteamLibraryPath)/common/Slay the Spire 2</Sts2Path>
+        <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">$(Sts2Path)/data_sts2_macos_x86_64</Sts2DataDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="sts2">
+            <HintPath>$(Sts2DataDir)/sts2.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Steamworks.NET">
+            <HintPath>$(Sts2DataDir)/Steamworks.NET.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildProjectName)\**" />
+        <None Include="LICENSE.txt" Condition="Exists('LICENSE.txt')" />
+        <None Include="project.godot" />
+        <None Include="README.md" Pack="true" PackagePath="/" Condition="Exists('README.md')" />
+        <None Include=".gitignore" Condition="Exists('.gitignore')" />
+        <None Include="export_presets.cfg" />
+        <None Include="DontAbandonYourFriends.json" />
+        <None Include="assets\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="build\DontAbandonYourFriends.props" PackagePath="/Content/" />
+        <Content Include="$(MSBuildProjectName).json" PackagePath="/Content/" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="scenes\DontAbandonYourFriends\" />
+    </ItemGroup>
+
+    <Target Name="UpdateManifestVersion" BeforeTargets="BeforeBuild">
+        <PropertyGroup>
+            <ManifestPath>$(MSBuildProjectName).json</ManifestPath>
+        </PropertyGroup>
+        <PropertyGroup>
+            <OldContent>$([System.IO.File]::ReadAllText($(ManifestPath)))</OldContent>
+            <NewContent>$([System.Text.RegularExpressions.Regex]::Replace($(OldContent), '("version":\s*")[^"]*', '$1v$(Version)'))</NewContent>
+            <!-- Keep "Author: … · vX.Y.Z" in manifest description in sync with $(Version) for the in-game mod browser. -->
+            <NewContent>$([System.Text.RegularExpressions.Regex]::Replace($(NewContent), '(Author:\s*latentspacez\s*·\s*)v[\d.]+', '$1v$(Version)'))</NewContent>
+        </PropertyGroup>
+        <WriteLinesToFile
+                Condition="'$(OldContent)' != '$(NewContent)'"
+                File="$(ManifestPath)"
+                Lines="$(NewContent)"
+                Overwrite="true"
+                Encoding="UTF-8" />
+        <Message Condition="'$(OldContent)' != '$(NewContent)'"
+                 Text="Updated DontAbandonYourFriends.json to version $(Version)"
+                 Importance="high" />
+    </Target>
+
+    <Target Name="CopyToModsFolderOnBuild" AfterTargets="AfterBuild">
+        <Message Text="Copying .dll and manifest to mods folder." Importance="high" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(Sts2Path)/mods/$(MSBuildProjectName)/" />
+        <Copy SourceFiles="$(MSBuildProjectName).json" DestinationFolder="$(Sts2Path)/mods/$(MSBuildProjectName)/" />
+    </Target>
+
+    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'">
+        <Message Text="Exporting Godot .pck to build folder" Importance="high"/>
+        <Exec Command="&quot;$(GodotPath)&quot; --headless --export-pack &quot;BasicExport&quot; &quot;build/$(MSBuildProjectName).pck&quot;"
+              EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1"
+              ContinueOnError="WarnAndContinue"/>
+        <Message Text="Copying Godot .pck to mods folder" Importance="high"/>
+        <Copy SourceFiles="build/$(MSBuildProjectName).pck" DestinationFolder="$(Sts2Path)/mods/$(MSBuildProjectName)/" />
+    </Target>
+
+    <Target Name="GodotPublishSkipped" AfterTargets="Publish" Condition="'$(GodotPath)' == '' or !Exists('$(GodotPath)')">
+        <Message Text="Skipping Godot .pck export because GodotPath is not configured." Importance="high"/>
+    </Target>
+</Project>
