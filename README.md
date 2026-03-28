@@ -6,12 +6,12 @@ Adds a **multiplayer run archive** under your profile save data: when you switch
 
 ## Origin Story
 
-`Alice`: Hey, I am finally back from work, let's continue our run!
-`Bob`: Oh, thats unfortunate... I started a new one.. Sorry
-`Alice`: WHAT?
-`Bob`: I didn't know if we would ever finish it.
-`Alice`: It.. was.. yesterday..
-`Bob`: :(
+> `Alice`: Hey, I am finally back from work, let's continue our run!
+> `Bob`: Oh, thats unfortunate... I started a new one.. Sorry
+> `Alice`: WHAT?
+> `Bob`: I didn't know if we would ever finish it.
+> `Alice`: It.. was.. yesterday..
+> `Bob`: :(
 
 ---
 
