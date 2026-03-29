@@ -236,7 +236,7 @@ internal static partial class MainMenuUiHelper
         megaLabel.OffsetBottom = 0;
         GameThemeHelper.ApplyLabelThemeItemsFromTheme(megaLabel, theme);
         GameThemeHelper.EnsureMainMenuLabelOutline(megaLabel);
-        megaLabel.AddThemeFontSizeOverride(ThemeConstants.Label.fontSize, fontSize);
+        megaLabel.AddThemeFontSizeOverride(LabelThemeKeys.FontSize, fontSize);
         megaLabel.SelfModulate = selfModulate ?? StsColors.cream;
         return megaLabel;
     }
@@ -310,8 +310,8 @@ internal static partial class MainMenuUiHelper
     {
         GameThemeHelper.ApplyLabelThemeItemsFromTheme(label, theme);
         GameThemeHelper.EnsureMainMenuLabelOutline(label);
-        label.AddThemeFontSizeOverride(ThemeConstants.Label.fontSize, fontSize);
-        label.AddThemeColorOverride(ThemeConstants.Label.fontColor, fontColor);
+        label.AddThemeFontSizeOverride(LabelThemeKeys.FontSize, fontSize);
+        label.AddThemeColorOverride(LabelThemeKeys.FontColor, fontColor);
     }
 
 

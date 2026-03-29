@@ -4,4 +4,22 @@
     <Version>0.1.0</Version>
     <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
   </PropertyGroup>
+
+  <!-- Default: sibling folder ../GameVersions (e.g. SlayTheSpire2/GameVersions). Override in Directory.Build.props.user. -->
+  <PropertyGroup>
+    <GameVersionsRoot Condition="'$(GameVersionsRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\GameVersions'))</GameVersionsRoot>
+  </PropertyGroup>
+
+  <!-- Local overrides (paths, GameVersionFolder, deploy) — not committed when gitignored. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.props.user" Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
+
+  <!-- GameAssemblyPath / VersionConstant are set in DontAbandonYourFriends.csproj after GameVersionFolder (may be set in .user or auto from release_info + GameVersions mirror). -->
+
+  <!-- Sts2SupportedVersions.json / MCP (fetch_latest_game_version, list_available_versions): Directory.Build.targets + build/*.ps1 -->
+  <PropertyGroup>
+    <UpdateReadmeFromSts2Versions Condition="'$(UpdateReadmeFromSts2Versions)' == ''">false</UpdateReadmeFromSts2Versions>
+    <ValidateSts2McpVersionCoverage Condition="'$(ValidateSts2McpVersionCoverage)' == ''">false</ValidateSts2McpVersionCoverage>
+    <Sts2McpDecompiledCachePath Condition="'$(Sts2McpDecompiledCachePath)' == ''"></Sts2McpDecompiledCachePath>
+    <Sts2McpVersionCoverageArgs Condition="'$(Sts2McpVersionCoverageArgs)' == ''"></Sts2McpVersionCoverageArgs>
+  </PropertyGroup>
 </Project>

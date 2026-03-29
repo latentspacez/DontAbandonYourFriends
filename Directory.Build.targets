@@ -1,0 +1,60 @@
+<Project>
+  <!-- Sts2SupportedVersions.json drives runtime compatibility, optional README sync, and MCP cache validation. Authoring: MCP fetch_latest_game_version + list_available_versions. -->
+
+  <!-- When DeployGameVersionFolder is unset, derive it from $(Sts2Path)/release_info.json version (same as runtime / MCP), e.g. v0.101.0 → v0_101_0. -->
+  <Target Name="ResolveDeployGameVersionFromInstall"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(SkipResolveDeployGameVersionFromInstall)' != 'true' and '$(DeployGameVersionFolder)' == '' and '$(GameVersionFolder)' == '' and '$(Sts2Path)' != '' and Exists('$(Sts2Path)\release_info.json')">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)build\Resolve-DeployGameVersionFolderFromReleaseInfo.ps1&quot; -Sts2Path &quot;$(Sts2Path)&quot;"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          Condition="'$(IsWindows)' == 'true'">
+      <Output TaskParameter="ConsoleOutput" PropertyName="DeployGameVersionFolder" />
+    </Exec>
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)build/Resolve-DeployGameVersionFolderFromReleaseInfo.ps1&quot; -Sts2Path &quot;$(Sts2Path)&quot;"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          Condition="'$(IsWindows)' != 'true'">
+      <Output TaskParameter="ConsoleOutput" PropertyName="DeployGameVersionFolder" />
+    </Exec>
+    <PropertyGroup>
+      <DeployGameVersionFolder>$([System.String]::Copy($(DeployGameVersionFolder)).Trim())</DeployGameVersionFolder>
+    </PropertyGroup>
+    <Message Text="DeployGameVersionFolder (from installed game release_info.json): $(DeployGameVersionFolder)" Importance="high" Condition="'$(DeployGameVersionFolder)' != ''" />
+  </Target>
+
+  <Target Name="UpdateReadmeCompatibilityHeader"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(UpdateReadmeFromSts2Versions)' == 'true'">
+    <Exec
+      Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Update-ReadmeFromSts2Versions.ps1&quot; -RepoRoot &quot;$(MSBuildProjectDirectory)&quot; -ModVersion &quot;$(Version)&quot;"
+      Condition="'$(IsWindows)' == 'true'" />
+    <Exec
+      Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Update-ReadmeFromSts2Versions.ps1&quot; -RepoRoot &quot;$(MSBuildProjectDirectory)&quot; -ModVersion &quot;$(Version)&quot;"
+      Condition="'$(IsWindows)' != 'true'" />
+  </Target>
+
+  <Target Name="ValidateSts2McpVersionCoverage"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(ValidateSts2McpVersionCoverage)' == 'true' AND '$(Sts2McpDecompiledCachePath)' != ''">
+    <Exec
+      Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Test-Sts2McpVersionCoverage.ps1&quot; -RepoRoot &quot;$(MSBuildProjectDirectory)&quot; -McpDecompiledCacheRoot &quot;$(Sts2McpDecompiledCachePath)&quot; $(Sts2McpVersionCoverageArgs)"
+      Condition="'$(IsWindows)' == 'true'" />
+    <Exec
+      Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\Test-Sts2McpVersionCoverage.ps1&quot; -RepoRoot &quot;$(MSBuildProjectDirectory)&quot; -McpDecompiledCacheRoot &quot;$(Sts2McpDecompiledCachePath)&quot; $(Sts2McpVersionCoverageArgs)"
+      Condition="'$(IsWindows)' != 'true'" />
+  </Target>
+  <!-- Batch-build every folder under GameVersions that contains sts2.dll; does not deploy to the StS2 game dir. -->
+  <Target Name="BuildAllGameVersions" DependsOnTargets="Restore">
+    <ItemGroup>
+      <_GameVersionSts2 Include="$(GameVersionsRoot)\*\sts2.dll" />
+    </ItemGroup>
+    <Error Text="No sts2.dll found under GameVersionsRoot=$(GameVersionsRoot). Add e.g. v0_101_0\sts2.dll." Condition="@(_GameVersionSts2->Count()) == 0" />
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="Build"
+             Properties="GameVersionFolder=$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName(%(_GameVersionSts2.Identity)))));SkipDeployToSts2Mods=true;SkipGeneratePackageOnBuild=true;SkipGodotDeployToMods=true;SkipResolveDeployGameVersionFromInstall=true" />
+  </Target>
+
+  <!-- Typo alias: BuildAllGameVersion → BuildAllGameVersions -->
+  <Target Name="BuildAllGameVersion" DependsOnTargets="BuildAllGameVersions" />
+</Project>

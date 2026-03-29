@@ -202,8 +202,8 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
             _panel.Theme = _theme;
             GameThemeHelper.ApplyLabelThemeItemsFromTheme(_status, _theme);
             GameThemeHelper.EnsureMainMenuLabelOutline(_status);
-            _status.AddThemeFontSizeOverride(ThemeConstants.Label.fontSize, 14);
-            _status.AddThemeColorOverride(ThemeConstants.Label.fontColor, new Color(0.75f, 0.72f, 0.68f));
+            _status.AddThemeFontSizeOverride(LabelThemeKeys.FontSize, 14);
+            _status.AddThemeColorOverride(LabelThemeKeys.FontColor, new Color(0.75f, 0.72f, 0.68f));
         }
 
     }

@@ -2,6 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <RootNamespace>DontAbandonYourFriends</RootNamespace>
+        <!-- Always use the name the game loader expects; game StS2 version is already in publish/<GameVersionFolder>/ when set. -->
         <AssemblyName>DontAbandonYourFriends</AssemblyName>
         <ImplicitUsings>true</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -11,8 +12,8 @@
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <OutputPath>publish/</OutputPath>
+        <GeneratePackageOnBuild Condition="'$(SkipGeneratePackageOnBuild)' == 'true'">false</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild Condition="'$(SkipGeneratePackageOnBuild)' != 'true'">true</GeneratePackageOnBuild>
         <PackageId>latentspacez.Sts2.DontAbandonYourFriends</PackageId>
         <Title>Don't Abandon Your Friends (Slay the Spire 2)</Title>
         <Description>v$(Version) by latentspacez — Multiplayer co-op save archive for Slay the Spire 2: auto-backup when switching saves, load into the live slot, unload, delete. Uses the game save store (Steam Cloud aware).</Description>
@@ -58,7 +59,51 @@
         <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">$(Sts2Path)/data_sts2_macos_x86_64</Sts2DataDir>
     </PropertyGroup>
 
-    <ItemGroup>
+    <!-- When GameVersionFolder is unset: match installed game (release_info.json) to a GameVersions mirror folder so refs + VERSION_* match the install. Skip with -p:SkipAutoGameVersionFolder=true. -->
+    <PropertyGroup Condition="'$(GameVersionFolder)' == '' and '$(SkipAutoGameVersionFolder)' != 'true' and '$(Sts2Path)' != ''">
+        <_ReleaseInfoPath>$([System.IO.Path]::Combine('$(Sts2Path)', 'release_info.json'))</_ReleaseInfoPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(GameVersionFolder)' == '' and '$(SkipAutoGameVersionFolder)' != 'true' and '$(_ReleaseInfoPath)' != '' and Exists('$(_ReleaseInfoPath)')">
+        <_ReleaseJsonForFolder>$([System.IO.File]::ReadAllText('$(_ReleaseInfoPath)'))</_ReleaseJsonForFolder>
+        <_VersionLabelFromInstall>$([System.Text.RegularExpressions.Regex]::Match($(_ReleaseJsonForFolder), '\"version\"\s*:\s*\"([^\"]+)\"').Groups[1].Value)</_VersionLabelFromInstall>
+        <_CandidateVersionFolder Condition="'$(_VersionLabelFromInstall)' != ''">v$([System.String]::Copy($(_VersionLabelFromInstall)).Trim().TrimStart('v').Replace('.', '_'))</_CandidateVersionFolder>
+        <_CandidateSts2FromMirror Condition="'$(_CandidateVersionFolder)' != ''">$([System.IO.Path]::Combine('$(GameVersionsRoot)', '$(_CandidateVersionFolder)', 'sts2.dll'))</_CandidateSts2FromMirror>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(GameVersionFolder)' == '' and '$(SkipAutoGameVersionFolder)' != 'true' and '$(_CandidateVersionFolder)' != '' and Exists('$(_CandidateSts2FromMirror)')">
+        <GameVersionFolder>$(_CandidateVersionFolder)</GameVersionFolder>
+    </PropertyGroup>
+    <!-- Deploy tracks compile target when unset; legacy (no mirror) still resolves deploy-only via Directory.Build.targets. -->
+    <PropertyGroup Condition="'$(DeployGameVersionFolder)' == '' and '$(GameVersionFolder)' != ''">
+        <DeployGameVersionFolder>$(GameVersionFolder)</DeployGameVersionFolder>
+    </PropertyGroup>
+    <PropertyGroup>
+        <OutputPath Condition="'$(GameVersionFolder)' == ''">publish/</OutputPath>
+        <OutputPath Condition="'$(GameVersionFolder)' != ''">publish/$(GameVersionFolder)/</OutputPath>
+    </PropertyGroup>
+    <!-- Must follow GameVersionFolder (including auto from release_info); Directory.Build.props runs too early for that. -->
+    <PropertyGroup Condition="'$(GameVersionFolder)' != ''">
+        <GameAssemblyPath>$([System.IO.Path]::Combine('$(GameVersionsRoot)', '$(GameVersionFolder)', 'sts2.dll'))</GameAssemblyPath>
+        <SteamworksPath>$([System.IO.Path]::Combine('$(GameVersionsRoot)', '$(GameVersionFolder)', 'Steamworks.NET.dll'))</SteamworksPath>
+        <VersionConstant Condition="'$(VersionConstant)' == ''">VERSION_$([System.String]::Copy($(GameVersionFolder)).Substring(1))</VersionConstant>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(VersionConstant)' != ''">
+        <DefineConstants>$(DefineConstants);$(VersionConstant)</DefineConstants>
+    </PropertyGroup>
+
+    <!-- GameVersions layout (preferred): sts2.dll + Steamworks.NET.dll per folder (see Directory.Build.props). -->
+    <ItemGroup Condition="'$(GameVersionFolder)' != ''">
+        <Reference Include="sts2">
+            <HintPath>$(GameAssemblyPath)</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Steamworks.NET" Condition="Exists('$(SteamworksPath)')">
+            <HintPath>$(SteamworksPath)</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
+    <!-- Legacy: reference StS2 install data_sts2_* when GameVersionFolder is not set. -->
+    <ItemGroup Condition="'$(GameVersionFolder)' == ''">
         <Reference Include="sts2">
             <HintPath>$(Sts2DataDir)/sts2.dll</HintPath>
             <Private>false</Private>
@@ -67,6 +112,12 @@
             <HintPath>$(Sts2DataDir)/Steamworks.NET.dll</HintPath>
             <Private>false</Private>
         </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Sts2SupportedVersions.json">
+            <LogicalName>DontAbandonYourFriends.Sts2SupportedVersions.json</LogicalName>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -110,13 +161,19 @@
                  Importance="high" />
     </Target>
 
-    <Target Name="CopyToModsFolderOnBuild" AfterTargets="AfterBuild">
-        <Message Text="Copying .dll and manifest to mods folder." Importance="high" />
+    <Target Name="ValidateGameVersionLayout" BeforeTargets="BeforeBuild" Condition="'$(GameVersionFolder)' != ''">
+        <Error Text="sts2.dll not found for GameVersionFolder=$(GameVersionFolder): $(GameAssemblyPath)" Condition="!Exists('$(GameAssemblyPath)')" />
+    </Target>
+
+    <!-- Copies to the live StS2 install only when DeployGameVersionFolder matches GameVersionFolder. DeployGameVersionFolder defaults from release_info.json when unset (see Directory.Build.targets). -->
+    <Target Name="CopyToModsFolderOnBuild" AfterTargets="AfterBuild"
+            Condition="'$(SkipDeployToSts2Mods)' != 'true' and '$(Sts2Path)' != '' and (('$(GameVersionFolder)' == '') or ('$(DeployGameVersionFolder)' != '' and '$(DeployGameVersionFolder)' == '$(GameVersionFolder)'))">
+        <Message Text="Copying $(TargetFileName) and manifest to $(Sts2Path)/mods/$(MSBuildProjectName)/" Importance="high" />
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(Sts2Path)/mods/$(MSBuildProjectName)/" />
         <Copy SourceFiles="$(MSBuildProjectName).json" DestinationFolder="$(Sts2Path)/mods/$(MSBuildProjectName)/" />
     </Target>
 
-    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'">
+    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true' and '$(SkipGodotDeployToMods)' != 'true' and '$(Sts2Path)' != '' and (('$(GameVersionFolder)' == '') or ('$(DeployGameVersionFolder)' != '' and '$(DeployGameVersionFolder)' == '$(GameVersionFolder)'))">
         <Message Text="Exporting Godot .pck to build folder" Importance="high"/>
         <Exec Command="&quot;$(GodotPath)&quot; --headless --export-pack &quot;BasicExport&quot; &quot;build/$(MSBuildProjectName).pck&quot;"
               EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1"
@@ -127,5 +184,34 @@
 
     <Target Name="GodotPublishSkipped" AfterTargets="Publish" Condition="'$(GodotPath)' == '' or !Exists('$(GodotPath)')">
         <Message Text="Skipping Godot .pck export because GodotPath is not configured." Importance="high"/>
+    </Target>
+
+    <!-- Windows: one distribution .zip next to the DLL (no zip/ staging folder). -->
+    <Target Name="CreatePublishShipArtifacts" AfterTargets="AfterBuild" Condition="'$(GameVersionFolder)' != '' and '$(SkipPublishShipArtifacts)' != 'true' and '$(IsWindows)' == 'true'">
+        <PropertyGroup>
+            <_ShipModVer>$([System.String]::Copy($(Version)).Replace('.', '_'))</_ShipModVer>
+            <_ShipSts2Ver>$([System.String]::Copy($(GameVersionFolder)).Substring(1))</_ShipSts2Ver>
+            <_ShipZipFile>$(TargetDir)$(MSBuildProjectName)_$(_ShipModVer)_StS2_$(_ShipSts2Ver).zip</_ShipZipFile>
+            <_ShipManifest>$(MSBuildProjectDirectory)\$(MSBuildProjectName).json</_ShipManifest>
+        </PropertyGroup>
+        <Exec Command="powershell.exe -NoProfile -NonInteractive -Command &quot;Compress-Archive -LiteralPath @('$(TargetPath)', '$(_ShipManifest)') -DestinationPath '$(_ShipZipFile)' -Force&quot;" />
+        <Message Text="Ship zip: $(_ShipZipFile)" Importance="high" Condition="Exists('$(_ShipZipFile)')" />
+    </Target>
+
+    <!-- After BuildAllGameVersions: copy a prebuilt DLL into mods. Does NOT run on plain `dotnet build` — pass -p:RunDeployGameVersionToMods=true. -->
+    <Target Name="DeployGameVersionToMods">
+        <Error Text="Deploy is opt-in: add -p:RunDeployGameVersionToMods=true (prevents this target from running during a normal build)." Condition="'$(RunDeployGameVersionToMods)' != 'true'" />
+        <PropertyGroup>
+            <_DeployDll>$(MSBuildProjectDirectory)\publish\$(DeployGameVersionFolder)\DontAbandonYourFriends.dll</_DeployDll>
+            <_ModsDir>$(Sts2Path)\mods\$(MSBuildProjectName)</_ModsDir>
+        </PropertyGroup>
+        <Error Text="Set DeployGameVersionFolder (e.g. v0_101_0) to match your GameVersions folder / MCP install check." Condition="'$(DeployGameVersionFolder)' == ''" />
+        <Error Text="Set Sts2Path to your Slay the Spire 2 install (or registry default)." Condition="'$(Sts2Path)' == ''" />
+        <Error Text="Missing built DLL: $(_DeployDll). Run: dotnet build $(MSBuildProjectFile) -t:BuildAllGameVersions" Condition="!Exists('$(_DeployDll)')" />
+        <MakeDir Directories="$(_ModsDir)" Condition="!Exists('$(_ModsDir)')" />
+        <Message Text="Deploying $(_DeployDll) to $(_ModsDir)" Importance="high" />
+        <Copy SourceFiles="$(_DeployDll)" DestinationFolder="$(_ModsDir)" />
+        <Copy SourceFiles="$(MSBuildProjectDirectory)\$(MSBuildProjectName).json" DestinationFolder="$(_ModsDir)" />
+        <Copy SourceFiles="$(MSBuildProjectDirectory)\build\$(MSBuildProjectName).pck" DestinationFolder="$(_ModsDir)" Condition="Exists('$(MSBuildProjectDirectory)\build\$(MSBuildProjectName).pck')" />
     </Target>
 </Project>

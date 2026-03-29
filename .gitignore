@@ -13,6 +13,7 @@ build/SpireChronicle.pck
 .vscode/*
 export.cfg
 export_presets.cfg
+obj/
 
 assets/
 docs/
@@ -22,3 +23,5 @@ docs/
 .cursorrules
 
 Properties/
+
+screenshots/

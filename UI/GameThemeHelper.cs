@@ -204,51 +204,51 @@ internal static class GameThemeHelper
     {
         const string labelType = "Label";
 
-        if (theme.HasFont(ThemeConstants.Label.font, labelType))
+        if (theme.HasFont(LabelThemeKeys.Font, labelType))
         {
-            Font? f = theme.GetFont(ThemeConstants.Label.font, labelType);
+            Font? f = theme.GetFont(LabelThemeKeys.Font, labelType);
             if (f != null)
             {
-                label.AddThemeFontOverride(ThemeConstants.Label.font, f);
+                label.AddThemeFontOverride(LabelThemeKeys.Font, f);
             }
         }
         else if (theme.DefaultFont != null)
         {
-            label.AddThemeFontOverride(ThemeConstants.Label.font, theme.DefaultFont);
+            label.AddThemeFontOverride(LabelThemeKeys.Font, theme.DefaultFont);
         }
 
-        if (theme.HasFontSize(ThemeConstants.Label.fontSize, labelType))
+        if (theme.HasFontSize(LabelThemeKeys.FontSize, labelType))
         {
-            label.AddThemeFontSizeOverride(ThemeConstants.Label.fontSize, theme.GetFontSize(ThemeConstants.Label.fontSize, labelType));
+            label.AddThemeFontSizeOverride(LabelThemeKeys.FontSize, theme.GetFontSize(LabelThemeKeys.FontSize, labelType));
         }
         else if (theme.DefaultFontSize > 0)
         {
-            label.AddThemeFontSizeOverride(ThemeConstants.Label.fontSize, theme.DefaultFontSize);
+            label.AddThemeFontSizeOverride(LabelThemeKeys.FontSize, theme.DefaultFontSize);
         }
 
-        if (theme.HasColor(ThemeConstants.Label.fontColor, labelType))
+        if (theme.HasColor(LabelThemeKeys.FontColor, labelType))
         {
-            label.AddThemeColorOverride(ThemeConstants.Label.fontColor, theme.GetColor(ThemeConstants.Label.fontColor, labelType));
+            label.AddThemeColorOverride(LabelThemeKeys.FontColor, theme.GetColor(LabelThemeKeys.FontColor, labelType));
         }
 
-        if (theme.HasColor(ThemeConstants.Label.fontOutlineColor, labelType))
+        if (theme.HasColor(LabelThemeKeys.FontOutlineColor, labelType))
         {
-            label.AddThemeColorOverride(ThemeConstants.Label.fontOutlineColor, theme.GetColor(ThemeConstants.Label.fontOutlineColor, labelType));
+            label.AddThemeColorOverride(LabelThemeKeys.FontOutlineColor, theme.GetColor(LabelThemeKeys.FontOutlineColor, labelType));
         }
 
-        if (theme.HasColor(ThemeConstants.Label.fontShadowColor, labelType))
+        if (theme.HasColor(LabelThemeKeys.FontShadowColor, labelType))
         {
-            label.AddThemeColorOverride(ThemeConstants.Label.fontShadowColor, theme.GetColor(ThemeConstants.Label.fontShadowColor, labelType));
+            label.AddThemeColorOverride(LabelThemeKeys.FontShadowColor, theme.GetColor(LabelThemeKeys.FontShadowColor, labelType));
         }
 
-        if (theme.HasConstant(ThemeConstants.Label.outlineSize, labelType))
+        if (theme.HasConstant(LabelThemeKeys.OutlineSize, labelType))
         {
-            label.AddThemeConstantOverride(ThemeConstants.Label.outlineSize, theme.GetConstant(ThemeConstants.Label.outlineSize, labelType));
+            label.AddThemeConstantOverride(LabelThemeKeys.OutlineSize, theme.GetConstant(LabelThemeKeys.OutlineSize, labelType));
         }
 
-        if (theme.HasConstant(ThemeConstants.Label.lineSpacing, labelType))
+        if (theme.HasConstant(LabelThemeKeys.LineSpacing, labelType))
         {
-            label.AddThemeConstantOverride(ThemeConstants.Label.lineSpacing, theme.GetConstant(ThemeConstants.Label.lineSpacing, labelType));
+            label.AddThemeConstantOverride(LabelThemeKeys.LineSpacing, theme.GetConstant(LabelThemeKeys.LineSpacing, labelType));
         }
     }
 
@@ -257,8 +257,8 @@ internal static class GameThemeHelper
     /// </summary>
     public static void EnsureMainMenuLabelOutline(Label label)
     {
-        label.AddThemeConstantOverride(ThemeConstants.Label.outlineSize, 14);
-        label.AddThemeColorOverride(ThemeConstants.Label.fontOutlineColor, new Color(0.11f, 0.11f, 0.12f, 1f));
+        label.AddThemeConstantOverride(LabelThemeKeys.OutlineSize, 14);
+        label.AddThemeColorOverride(LabelThemeKeys.FontOutlineColor, new Color(0.11f, 0.11f, 0.12f, 1f));
     }
 
     public static void ApplyButtonFontFromTheme(Button button, Theme theme)
