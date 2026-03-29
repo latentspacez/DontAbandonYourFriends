@@ -32,8 +32,8 @@ Writes use the game’s **`ISaveStore`** so behavior stays consistent with **Ste
 
 1. Download the latest release from [github](https://github.com/latentspacez/DontAbandonYourFriends/releases) or [nexusmods](https://www.nexusmods.com/slaythespire2/mods/312?tab=files).
 2. Copy the mod folder (containing **`DontAbandonYourFriends.dll`**, **`DontAbandonYourFriends.json`**) into the game’s **`mods/DontAbandonYourFriends/`** directory under `SteamLibrary\steamapps\common\Slay the Spire 2` (create the mod directory if it does not exist yet).
-3. Enable the mod in the in-game mod manager. The manifest **`description`** includes **author** and **mod version** for quick identification.
-4. If this is your first mod, copy your ProfileN/save to \AppData\Roaming\SlayTheSpire2\steam
+3. Enable the mod in the in-game mod manager. .
+4. Important! If this is your first mod, copy your `ProfileN/save` to `modded/ProfileN/save` \AppData\Roaming\SlayTheSpire2\steam
 
 Pre-built releases ship the usual **`DontAbandonYourFriends.dll`**. If you compile yourself, see **[Building](#building)** for default and StS2-specific outputs.
 
