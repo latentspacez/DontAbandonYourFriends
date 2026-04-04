@@ -31,13 +31,13 @@ public static class MainFile
 
         if (!GameCompatibility.IsSupportedGameBuild(out string compatDetail))
         {
-            IsModEnabled = false;
-            Logger.Error($"Don't Abandon Your Friends: incompatible game build — mod disabled. {compatDetail}");
-            GD.PrintErr($"[{ModId}] Incompatible game build — mod disabled. {compatDetail}");
-            return;
+            Logger.Info($"Don't Abandon Your Friends: game compatibility note (non-blocking). {compatDetail}");
+            GD.PrintErr($"[{ModId}] Compatibility note (non-blocking): {compatDetail}");
         }
-
-        Logger.Info($"Don't Abandon Your Friends: game compatibility OK. {compatDetail}");
+        else
+        {
+            Logger.Info($"Don't Abandon Your Friends: game compatibility OK. {compatDetail}");
+        }
 
         var tree = (SceneTree)Engine.GetMainLoop();
         tree.Root.CallDeferred("add_child", new DontAbandonYourFriendsMenuButton());

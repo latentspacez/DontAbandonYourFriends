@@ -12,7 +12,7 @@ namespace DontAbandonYourFriends.UI;
 /// </summary>
 internal static class LabelThemeKeys
 {
-#if VERSION_0_101_0
+#if VERSION_0_101_0 || VERSION_0_102_0
     public static readonly StringName Font = "font";
     public static readonly StringName FontSize = "font_size";
     public static readonly StringName FontColor = "font_color";

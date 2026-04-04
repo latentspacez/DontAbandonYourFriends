@@ -1,5 +1,5 @@
-﻿{
-  "$comment": "Supported builds use release_info.json \"version\" (e.g. v0.99.1) — same as MCP. Folder names align with MCP decompiled_cache.",
+{
+  "$comment": "Supported builds use release_info.json \"version\" (e.g. v0.99.1) - same as MCP. Folder names align with MCP decompiled_cache.",
   "supportedGameBuilds": [
     {
       "displayLabel": "v0.99.1",
@@ -10,6 +10,11 @@
       "displayLabel": "v0.101.0",
       "mcpDecompiledFolderName": "0_101_0",
       "preprocessorSymbol": "VERSION_0_101_0"
+    },
+    {
+      "displayLabel": "v0.102.0",
+      "mcpDecompiledFolderName": "0_102_0",
+      "preprocessorSymbol": "VERSION_0_102_0"
     }
   ]
 }

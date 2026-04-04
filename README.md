@@ -2,7 +2,7 @@
 
 **Author:** latentspacez  
 **Mod version:** v0.1.0  
-**Slay the Spire 2 Compatibility:** v0.99.1, v0.101.0   
+**Compiled against StS2 API versions:** `0_99_1` and `0_102_0`   
 
 Adds a **multiplayer run archive** under your profile save data: when you switch which backup is active, the mod can **preserve** prior co-op runs, let you **load** one back into the live multiplayer slot, **unload** the current run into the archive, or **delete** stored backups. Intended for players who share or rotate co-op saves without losing progress.
 
@@ -106,7 +106,7 @@ With defaults, **`GameVersionFolder`** and deploy tracking follow the **installe
 
 | Area | Role |
 |------|------|
-| **`MainFile.cs`** | `[ModInitializer]` entry: logs version, runs **`GameCompatibility.IsSupportedGameBuild`**, then adds **`DontAbandonYourFriendsMenuButton`** to the scene tree. Sets **`MainFile.IsModEnabled`** false and exits on unsupported **`sts2.dll`**. |
+| **`MainFile.cs`** | `[ModInitializer]` entry: logs version, records a non-blocking compatibility note from **`GameCompatibility.IsSupportedGameBuild`**, then adds **`DontAbandonYourFriendsMenuButton`** to the scene tree. |
 | **`UI/DontAbandonYourFriendsMenuButton.cs`** | Main-menu entry that opens the archive UI when appropriate. |
 | **`UI/DontAbandonYourFriendsScreen.cs`** | Full-screen modal: list of live + archived runs, **Load** / **Unload** / **Delete**, previews, guards for visibility and duplicate open. |
 | **`UI/MainMenuUiHelper.cs`** | Shared helpers for menu placement / theming where used. |
