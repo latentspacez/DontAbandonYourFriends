@@ -15,6 +15,11 @@
       "displayLabel": "v0.102.0",
       "mcpDecompiledFolderName": "0_102_0",
       "preprocessorSymbol": "VERSION_0_102_0"
+    },
+    {
+      "displayLabel": "v0.103.3",
+      "mcpDecompiledFolderName": "0_103_3",
+      "preprocessorSymbol": "VERSION_0_103_3"
     }
   ]
 }
