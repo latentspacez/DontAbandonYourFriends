@@ -16,6 +16,10 @@ export_presets.cfg
 obj/
 
 assets/
+!assets/
+assets/*
+!assets/characters/
+!assets/characters/*.PNG
 docs/
 
 .cursor/

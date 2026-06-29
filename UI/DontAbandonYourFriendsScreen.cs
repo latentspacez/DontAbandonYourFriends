@@ -37,6 +37,8 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
     private const int RunMetaFontSize = 14;
 
     private const int ActiveSaveBadgeFontSize = 10;
+    private const int PlayerPortraitTileWidth = 186;
+    private const int PlayerPortraitTileHeight = 156;
 
     /// <summary>Cached resources for UI performance.</summary>
     private static readonly Color TextMutedColor = new(0.75f, 0.72f, 0.68f, 1f);
@@ -56,7 +58,7 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
     private static StyleBoxFlat LiveRowStyle => _liveRowStyle ??= new StyleBoxFlat
     {
         BgColor = new Color(0.14f, 0.18f, 0.14f, 1f),
-        BorderColor = new Color(Accent.R * 0.7f, Accent.G * 0.85f, Accent.B * 0.35f, 1f),
+        BorderColor = new Color(0.12f, 0.38f, 0.16f, 1f),
         BorderWidthLeft = 1, BorderWidthTop = 1, BorderWidthRight = 1, BorderWidthBottom = 1,
         ContentMarginLeft = 8, ContentMarginTop = 6, ContentMarginRight = 8, ContentMarginBottom = 6,
     };
@@ -354,6 +356,21 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
         }
     }
 
+    private async Task ScrollListToTopAsync()
+    {
+        _scroll.ScrollVertical = 0;
+        SceneTree? tree = GetTree();
+        if (tree != null)
+        {
+            await ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        }
+
+        if (GodotObject.IsInstanceValid(this))
+        {
+            _scroll.ScrollVertical = 0;
+        }
+    }
+
     /// <summary>Uses raw run <c>save_time</c> from preview when present; otherwise archive index <c>createdUtc</c>.</summary>
     private static long ArchiveRowNewestFirstKey(ArchiveListRow row)
     {
@@ -447,12 +464,12 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
         col.AddChild(rosterMargin);
 
         var playersRow = new HBoxContainer();
-        playersRow.AddThemeConstantOverride("separation", 24);
+        playersRow.AddThemeConstantOverride("separation", 12);
         rosterMargin.AddChild(playersRow);
 
         foreach (var p in preview.Players)
         {
-            playersRow.AddChild(BuildPlayerStrip(p));
+            playersRow.AddChild(BuildPlayerPortraitTile(p));
         }
 
         // --- ZONE 3: FOOTER (Actions) ---
@@ -558,12 +575,12 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
         col.AddChild(rosterMargin);
 
         var playersRow = new HBoxContainer();
-        playersRow.AddThemeConstantOverride("separation", 24); // Give players room to breathe
+        playersRow.AddThemeConstantOverride("separation", 12);
         rosterMargin.AddChild(playersRow);
 
         foreach (PlayerRowPreview p in row.Preview.Players)
         {
-            playersRow.AddChild(BuildPlayerStrip(p));
+            playersRow.AddChild(BuildPlayerPortraitTile(p));
         }
 
         // --- ZONE 3: FOOTER (Actions) ---
@@ -656,12 +673,12 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
         col.AddChild(rosterMargin);
 
         var playersRow = new HBoxContainer();
-        playersRow.AddThemeConstantOverride("separation", 24);
+        playersRow.AddThemeConstantOverride("separation", 12);
         rosterMargin.AddChild(playersRow);
 
         foreach (PlayerRowPreview p in live.Preview.Players)
         {
-            playersRow.AddChild(BuildPlayerStrip(p));
+            playersRow.AddChild(BuildPlayerPortraitTile(p));
         }
 
         // --- ZONE 3: FOOTER (Actions & Badge) ---
@@ -702,69 +719,138 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
         return frame;
     }
 
-    private Control BuildPlayerStrip(PlayerRowPreview p)
+    private Control BuildPlayerPortraitTile(PlayerRowPreview p)
     {
-        var box = new VBoxContainer();
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 4);
-        box.AddChild(row);
-
-        var texRect = new TextureRect
+        var outer = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(32, 32),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            CustomMinimumSize = new Vector2(PlayerPortraitTileWidth, PlayerPortraitTileHeight),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkBegin,
+            ClipContents = true,
         };
-        try
+        outer.AddThemeStyleboxOverride("panel", CreatePlayerPortraitTileStyle());
+
+        var host = new Control
         {
-            string id = p.CharacterIdEntry.Trim().ToLowerInvariant();
-            string path = ImageHelper.GetImagePath($"ui/top_panel/character_icon_{id}.png");
-            if (PreloadManager.Cache.GetTexture2D(path) is { } tex)
+            CustomMinimumSize = new Vector2(PlayerPortraitTileWidth, PlayerPortraitTileHeight),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        outer.AddChild(host);
+
+        Texture2D? portrait = CharacterPortraitLoader.TryLoadPlayerTexture(p.CharacterIdEntry);
+        if (portrait != null && GodotObject.IsInstanceValid(portrait))
+        {
+            var portraitRect = new TextureRect
             {
-                texRect.Texture = tex;
-            }
+                Texture = portrait,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            };
+            portraitRect.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            host.AddChild(portraitRect);
         }
-        catch (Exception ex)
+        else
         {
-            GD.PrintErr($"[DontAbandonYourFriends] Icon: {ex.Message}");
+            var placeholder = new ColorRect
+            {
+                Color = new Color(0.10f, 0.10f, 0.12f, 1f),
+            };
+            placeholder.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+            host.AddChild(placeholder);
         }
 
-        row.AddChild(texRect);
+        var shade = new ColorRect
+        {
+            Color = new Color(0f, 0f, 0f, 0.72f),
+        };
+        shade.AnchorLeft = 0f;
+        shade.AnchorRight = 1f;
+        shade.AnchorTop = 0.52f;
+        shade.AnchorBottom = 1f;
+        host.AddChild(shade);
 
-        var textCol = new VBoxContainer();
-        textCol.AddThemeConstantOverride("separation", 0); // Tighten the gap between name and stats
-        row.AddChild(textCol);
-        
-        string who = !string.IsNullOrWhiteSpace(p.DisplayName) 
+        var statsCol = new VBoxContainer
+        {
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        statsCol.AnchorLeft = 0f;
+        statsCol.AnchorRight = 1f;
+        statsCol.AnchorTop = 0.52f;
+        statsCol.AnchorBottom = 1f;
+        statsCol.OffsetLeft = 4;
+        statsCol.OffsetRight = -4;
+        statsCol.OffsetTop = 4;
+        statsCol.OffsetBottom = -5;
+        statsCol.AddThemeConstantOverride("separation", 0);
+        host.AddChild(statsCol);
+
+        string who = !string.IsNullOrWhiteSpace(p.DisplayName)
             ? p.DisplayName!
             : (p.PlayerIndex > 0 ? $"Player {p.PlayerIndex}" : "Player");
+        string characterTitle = CharacterPortraitArt.FormatCharacterTitle(p.CharacterIdEntry);
 
-        // --- Update font size to 14 ---
-        Control nameLabel = CreateTextElement(who, 14, HorizontalAlignment.Left, StsColors.cream, expandFill: true);
-        nameLabel.CustomMinimumSize = new Vector2(170, 0);
-        
-        if (nameLabel is MegaLabel megaName) megaName.AutoSizeEnabled = false;
-        if (nameLabel is Label lblName)
+        Control nameLabel = CreateTextElement(who, 12, HorizontalAlignment.Center, StsColors.cream, expandFill: true);
+        PrepareTileLabel(nameLabel);
+        statsCol.AddChild(nameLabel);
+
+        bool showCharacterSubline = !string.IsNullOrWhiteSpace(p.DisplayName)
+            && characterTitle != "-"
+            && !string.Equals(p.DisplayName.Trim(), characterTitle, StringComparison.OrdinalIgnoreCase);
+        if (showCharacterSubline)
         {
-            lblName.AutowrapMode = TextServer.AutowrapMode.Off;
-            lblName.ClipContents = true;
-            lblName.MaxLinesVisible = 1;
+            Control characterLabel = CreateTextElement(characterTitle, 10, HorizontalAlignment.Center, TextMutedColor, expandFill: true);
+            PrepareTileLabel(characterLabel);
+            statsCol.AddChild(characterLabel);
         }
-        textCol.AddChild(nameLabel);
 
-        // --- Update font size to 11 ---
-        string statsText = $"HP {p.CurrentHp}/{p.MaxHp} · {p.DeckCount} cards · {p.RelicCount} relics";
-        Control statsLabel = CreateTextElement(statsText, 11, HorizontalAlignment.Left, TextMutedColor);
-        
-        if (statsLabel is MegaLabel megaStats) megaStats.AutoSizeEnabled = false;
-        if (statsLabel is Label lblStats)
+        Control hpLabel = CreateTextElement($"HP {p.CurrentHp}/{p.MaxHp}", 10, HorizontalAlignment.Center, TextMetaColor, expandFill: true);
+        PrepareTileLabel(hpLabel);
+        statsCol.AddChild(hpLabel);
+
+        Control cardsLabel = CreateTextElement($"{p.DeckCount} cards", 10, HorizontalAlignment.Center, TextMetaColor, expandFill: true);
+        PrepareTileLabel(cardsLabel);
+        statsCol.AddChild(cardsLabel);
+
+        Control relicsLabel = CreateTextElement($"{p.RelicCount} relics", 10, HorizontalAlignment.Center, TextMetaColor, expandFill: true);
+        PrepareTileLabel(relicsLabel);
+        statsCol.AddChild(relicsLabel);
+
+        return outer;
+    }
+
+    private static StyleBoxFlat CreatePlayerPortraitTileStyle()
+    {
+        return new StyleBoxFlat
         {
-            lblStats.AutowrapMode = TextServer.AutowrapMode.Off;
-            lblStats.ClipContents = true;
-        }
-        textCol.AddChild(statsLabel);
+            BgColor = new Color(0.06f, 0.06f, 0.07f, 1f),
+            BorderColor = new Color(0.06f, 0.06f, 0.08f, 0.92f),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 2,
+            CornerRadiusTopRight = 2,
+            CornerRadiusBottomLeft = 2,
+            CornerRadiusBottomRight = 2,
+        };
+    }
 
-        return box;
+    private static void PrepareTileLabel(Control label)
+    {
+        label.CustomMinimumSize = new Vector2(PlayerPortraitTileWidth - 8, 0);
+        if (label is MegaLabel mega)
+        {
+            mega.AutoSizeEnabled = false;
+        }
+        if (label is Label lbl)
+        {
+            lbl.AutowrapMode = TextServer.AutowrapMode.Off;
+            lbl.ClipContents = true;
+            lbl.MaxLinesVisible = 1;
+        }
     }
 
     private async Task OnUnloadPressedAsync()
@@ -813,7 +899,8 @@ public partial class DontAbandonYourFriendsScreen : CanvasLayer
             _status.Text = "Loaded into the multiplayer run save file (Steam Cloud updated). That archive entry was removed so the run is not duplicated — use Continue or the multiplayer menu as usual.";
             
             // Pass false to avoid flashing "Loading..." and destroying our success message
-            await RefreshListAsync(showLoadingText: false); 
+            await RefreshListAsync(showLoadingText: false);
+            await ScrollListToTopAsync();
             await TryNotifyVanillaMultiplayerSubmenuAfterSaveStateChangeAsync();
         }
         catch (Exception ex)

@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Godot;
 using DontAbandonYourFriends.UI;
 using MegaCrit.Sts2.Core.Modding;
@@ -21,22 +22,18 @@ public static class MainFile
 
         try
         {
-            string modVer = ModVersionInfo.GetInformationalVersion();
-            Logger.Info($"Don't Abandon Your Friends: mod loading (version {modVer}, Godot {GameCompatibility.GetGodotVersionSummary()}).");
+            var asm = typeof(MainFile).Assembly;
+            var info = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            string modVer = info?.InformationalVersion ?? asm.GetName().Version?.ToString() ?? "unknown";
+
+            var godot = Engine.GetVersionInfo();
+            string godotVer = $"{godot["major"]}.{godot["minor"]}.{godot["patch"]}";
+
+            Logger.Info($"Don't Abandon Your Friends: mod loading (version {modVer}, Godot {godotVer}).");
         }
         catch (Exception ex)
         {
             Logger.Info($"Don't Abandon Your Friends: mod loading (version unknown: {ex.Message}).");
-        }
-
-        if (!GameCompatibility.IsSupportedGameBuild(out string compatDetail))
-        {
-            Logger.Info($"Don't Abandon Your Friends: game compatibility note (non-blocking). {compatDetail}");
-            GD.PrintErr($"[{ModId}] Compatibility note (non-blocking): {compatDetail}");
-        }
-        else
-        {
-            Logger.Info($"Don't Abandon Your Friends: game compatibility OK. {compatDetail}");
         }
 
         var tree = (SceneTree)Engine.GetMainLoop();

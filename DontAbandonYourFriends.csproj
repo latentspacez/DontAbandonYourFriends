@@ -6,6 +6,7 @@
         <AssemblyName>DontAbandonYourFriends</AssemblyName>
         <ImplicitUsings>true</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
         <PathMap>$(AppOutputBase)=.\</PathMap>
     </PropertyGroup>
@@ -115,12 +116,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Sts2SupportedVersions.json">
-            <LogicalName>DontAbandonYourFriends.Sts2SupportedVersions.json</LogicalName>
-        </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="$(MSBuildProjectName)\**" />
         <None Include="LICENSE.txt" Condition="Exists('LICENSE.txt')" />
         <None Include="project.godot" />
@@ -128,7 +123,14 @@
         <None Include=".gitignore" Condition="Exists('.gitignore')" />
         <None Include="export_presets.cfg" />
         <None Include="DontAbandonYourFriends.json" />
-        <None Include="assets\**" />
+        <None Include="assets\**" Exclude="assets\characters\**\*.PNG;assets\characters\**\*.png" />
+    </ItemGroup>
+
+    <!-- Optional character portraits: add assets/characters/The*.PNG to embed full-size Insights-style art in the DLL. -->
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\assets\characters')">
+        <EmbeddedResource Include="assets\characters\The*.PNG" Exclude="assets\characters\*_small.PNG">
+            <LogicalName>DontAbandonYourFriends.embedded.characters.%(Filename)%(Extension)</LogicalName>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>

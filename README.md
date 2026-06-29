@@ -2,7 +2,7 @@
 
 **Author:** latentspacez  
 **Mod version:** v0.1.0  
-**Compiled against StS2 API version:** `0_103_3`   
+**Compiled against:** StS2 v0.107.1
 
 Adds a **multiplayer run archive** under your profile save data: when you switch which backup is active, the mod can **preserve** prior co-op runs, let you **load** one back into the live multiplayer slot, **unload** the current run into the archive, or **delete** stored backups. Intended for players who share or rotate co-op saves without losing progress.
 
@@ -106,7 +106,7 @@ With defaults, **`GameVersionFolder`** and deploy tracking follow the **installe
 
 | Area | Role |
 |------|------|
-| **`MainFile.cs`** | `[ModInitializer]` entry: logs version, records a non-blocking compatibility note from **`GameCompatibility.IsSupportedGameBuild`**, then adds **`DontAbandonYourFriendsMenuButton`** to the scene tree. |
+| **`MainFile.cs`** | `[ModInitializer]` entry: logs mod version, then adds **`DontAbandonYourFriendsMenuButton`** to the scene tree. |
 | **`UI/DontAbandonYourFriendsMenuButton.cs`** | Main-menu entry that opens the archive UI when appropriate. |
 | **`UI/DontAbandonYourFriendsScreen.cs`** | Full-screen modal: list of live + archived runs, **Load** / **Unload** / **Delete**, previews, guards for visibility and duplicate open. |
 | **`UI/MainMenuUiHelper.cs`** | Shared helpers for menu placement / theming where used. |
@@ -114,7 +114,6 @@ With defaults, **`GameVersionFolder`** and deploy tracking follow the **installe
 | **`Services/MultiplayerSaveArchiveService.cs`** | Archive index (`index.json`), read/write under **`{profile}/mods/dont_abandon_your_friends/archives/`**, load/unload/delete, live slot coordination. |
 | **`Services/RunSavePreviewFactory.cs`** | Parses multiplayer save JSON via **`SaveManager.FromJson<SerializableRun>`** and **`RunState`** for UI previews. |
 | **`Services/SaveStoreAccessor.cs`** | Reflection to obtain **`ISaveStore`** from **`SaveManager`**. |
-| **`GameCompatibility.cs`** / **`GameCompatibilityConstants.cs`** | **`release_info.json` `version`** vs embedded **`Sts2SupportedVersions.json`** (not **`sts2.dll` FileVersion**). |
 
 ---
 
