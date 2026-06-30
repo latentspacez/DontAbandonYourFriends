@@ -150,7 +150,7 @@
             <OldContent>$([System.IO.File]::ReadAllText($(ManifestPath)))</OldContent>
             <NewContent>$([System.Text.RegularExpressions.Regex]::Replace($(OldContent), '("version":\s*")[^"]*', '$1v$(Version)'))</NewContent>
             <!-- Keep "Author: … · vX.Y.Z" in manifest description in sync with $(Version) for the in-game mod browser. -->
-            <NewContent>$([System.Text.RegularExpressions.Regex]::Replace($(NewContent), '(Author:\s*latentspacez\s*·\s*)v[\d.]+', '$1v$(Version)'))</NewContent>
+            <NewContent>$([System.Text.RegularExpressions.Regex]::Replace($(NewContent), '(Author:\s*latentspacez\s*(?:·|\\u00b7)\s*)v[\d.]+', '$1v$(Version)'))</NewContent>
         </PropertyGroup>
         <WriteLinesToFile
                 Condition="'$(OldContent)' != '$(NewContent)'"
@@ -186,6 +186,36 @@
 
     <Target Name="GodotPublishSkipped" AfterTargets="Publish" Condition="'$(GodotPath)' == '' or !Exists('$(GodotPath)')">
         <Message Text="Skipping Godot .pck export because GodotPath is not configured." Importance="high"/>
+    </Target>
+
+    <Target Name="PrepareWorkshopWorkspace" AfterTargets="Publish" Condition="'$(SkipPrepareWorkshopWorkspace)' != 'true'">
+        <PropertyGroup>
+            <_WorkshopDir>$(TargetDir)workshop\</_WorkshopDir>
+            <_WorkshopContentDir>$(_WorkshopDir)content\</_WorkshopContentDir>
+            <_WorkshopTemplate>$(MSBuildProjectDirectory)\workshop\workshop.json.template</_WorkshopTemplate>
+            <_WorkshopReadme>$(MSBuildProjectDirectory)\workshop\README.md</_WorkshopReadme>
+            <_WorkshopImage>$(MSBuildProjectDirectory)\screenshots\UI_v1_0_1.png</_WorkshopImage>
+            <_WorkshopGameVersion Condition="'$(GameVersionFolder)' != ''">v$([System.String]::Copy($(GameVersionFolder)).Substring(1).Replace('_', '.'))</_WorkshopGameVersion>
+            <_WorkshopGameVersion Condition="'$(GameVersionFolder)' == ''">unknown</_WorkshopGameVersion>
+        </PropertyGroup>
+        <Error Text="Workshop template not found: $(_WorkshopTemplate)" Condition="!Exists('$(_WorkshopTemplate)')" />
+        <Error Text="Workshop image not found: $(_WorkshopImage)" Condition="!Exists('$(_WorkshopImage)')" />
+        <MakeDir Directories="$(_WorkshopDir);$(_WorkshopContentDir)" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(_WorkshopContentDir)" />
+        <Copy SourceFiles="$(MSBuildProjectDirectory)\$(MSBuildProjectName).json" DestinationFolder="$(_WorkshopContentDir)" />
+        <Copy SourceFiles="$(_WorkshopImage)" DestinationFiles="$(_WorkshopDir)image.png" />
+        <Copy SourceFiles="$(_WorkshopReadme)" DestinationFolder="$(_WorkshopDir)" Condition="Exists('$(_WorkshopReadme)')" />
+        <PropertyGroup>
+            <_WorkshopJson>$([System.IO.File]::ReadAllText('$(_WorkshopTemplate)'))</_WorkshopJson>
+            <_WorkshopJson>$([System.String]::Copy($(_WorkshopJson)).Replace('{{MOD_VERSION}}', 'v$(Version)'))</_WorkshopJson>
+            <_WorkshopJson>$([System.String]::Copy($(_WorkshopJson)).Replace('{{STS2_VERSION}}', '$(_WorkshopGameVersion)'))</_WorkshopJson>
+        </PropertyGroup>
+        <WriteLinesToFile
+                File="$(_WorkshopDir)workshop.json"
+                Lines="$(_WorkshopJson)"
+                Overwrite="true"
+                Encoding="UTF-8" />
+        <Message Text="Workshop workspace: $(_WorkshopDir)" Importance="high" />
     </Target>
 
     <!-- Windows: one distribution .zip next to the DLL (no zip/ staging folder). -->

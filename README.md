@@ -1,7 +1,7 @@
 # Don't Abandon Your Friends
 
 **Author:** latentspacez  
-**Mod version:** v0.1.0  
+**Mod version:** v1.0.2 
 **Compiled against:** StS2 v0.107.1
 
 Adds a **multiplayer run archive** under your profile save data: when you switch which backup is active, the mod can **preserve** prior co-op runs, let you **load** one back into the live multiplayer slot, **unload** the current run into the archive, or **delete** stored backups. Intended for players who share or rotate co-op saves without losing progress.
