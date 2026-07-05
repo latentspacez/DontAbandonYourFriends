@@ -2,7 +2,7 @@
 
 **Author:** latentspacez  
 **Mod version:** v1.0.2 
-**Compiled against:** StS2 v0.107.1
+**Compiled against:** StS2 v0.108.0 (supports **v0.107.1–v0.108.0** in one DLL)
 
 Adds a **multiplayer run archive** under your profile save data: when you switch which backup is active, the mod can **preserve** prior co-op runs, let you **load** one back into the live multiplayer slot, **unload** the current run into the archive, or **delete** stored backups. Intended for players who share or rotate co-op saves without losing progress.
 

@@ -37,7 +37,7 @@ internal sealed class MultiplayerSaveArchiveService
     }
 
     /// <summary>
-    /// Same scoping as <see cref="RunSaveManager.GetRunSavePath"/>: under
+    /// Same scoping as live run saves: under
     /// <see cref="UserDataPathProvider.GetProfileDir"/> so each profile has its own archive (ISaveStore root is account-wide).
     /// </summary>
     private static string ArchiveRootForProfile(int profileId)
@@ -52,9 +52,8 @@ internal sealed class MultiplayerSaveArchiveService
     /// </summary>
     private static string NormalizeStorePath(string path) => path.Replace('\\', '/');
 
-    /// <inheritdoc cref="RunSaveManager.GetRunSavePath"/>
     private static string NormalizedRunSavePath(int profileId, string fileName) =>
-        NormalizeStorePath(RunSaveManager.GetRunSavePath(profileId, fileName));
+        NormalizeStorePath(RunSavePathHelper.GetProfileSavePath(profileId, fileName));
 
     private string ArchiveRoot => ArchiveRootForProfile(SaveManager.Instance.CurrentProfileId);
 
@@ -437,8 +436,8 @@ internal sealed class MultiplayerSaveArchiveService
     /// </summary>
     private void TryDeleteAllLiveMultiplayerPathVariantsAfterUnload(int profileId, string operation)
     {
-        string rawMp = RunSaveManager.GetRunSavePath(profileId, RunSaveManager.multiplayerRunSaveFileName);
-        string rawMeta = RunSaveManager.GetRunSavePath(profileId, MultiplayerSavePaths.LiveRunMetaFileName);
+        string rawMp = RunSavePathHelper.GetProfileSavePath(profileId, RunSaveManager.multiplayerRunSaveFileName);
+        string rawMeta = RunSavePathHelper.GetProfileSavePath(profileId, MultiplayerSavePaths.LiveRunMetaFileName);
         string nMp = NormalizeStorePath(rawMp);
         string nMeta = NormalizeStorePath(rawMeta);
         var paths = new[]
@@ -484,8 +483,8 @@ internal sealed class MultiplayerSaveArchiveService
             return;
         }
 
-        string rawMp = RunSaveManager.GetRunSavePath(profileId, RunSaveManager.multiplayerRunSaveFileName);
-        string rawMeta = RunSaveManager.GetRunSavePath(profileId, MultiplayerSavePaths.LiveRunMetaFileName);
+        string rawMp = RunSavePathHelper.GetProfileSavePath(profileId, RunSaveManager.multiplayerRunSaveFileName);
+        string rawMeta = RunSavePathHelper.GetProfileSavePath(profileId, MultiplayerSavePaths.LiveRunMetaFileName);
         string nMp = NormalizeStorePath(rawMp);
         string nMeta = NormalizeStorePath(rawMeta);
         var paths = new[]
